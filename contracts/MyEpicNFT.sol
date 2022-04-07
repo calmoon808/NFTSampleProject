@@ -61,7 +61,7 @@ contract MyEpicNFT is ERC721URIStorage {
         return uint256(keccak256(abi.encodePacked(input)));
     }
 
-    function makeAnEpicNFT() public {
+    function makeAnEpicNFT(string memory ipfsLink) public {
         // get current tokenId, starts at 0
         uint256 newItemId = _tokenIds.current();
         require(newItemId < 50, "Can't mint for than 50 NFT's");
@@ -90,11 +90,13 @@ contract MyEpicNFT is ERC721URIStorage {
             abi.encodePacked("data:application/json;base64,", json)
         );
 
+        console.log(finalTokenUri);
+
         // mint the NFT to the sender using msg.sender
         _safeMint(msg.sender, newItemId);
 
         // Set the NFT's data
-        _setTokenURI(newItemId, finalTokenUri);
+        _setTokenURI(newItemId, ipfsLink);
         console.log("An NFT w/ ID %s has been minted to %s", newItemId, msg.sender);
 
         // Increment counter for next NFT to be minted
