@@ -4,19 +4,32 @@ import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import myEpicNftAbi from "./utils/myEpicNftAbi.json";
 import Loader from "./components/Loader/Loader";
+import { Buffer } from 'buffer';
+import axios from "axios";
+
 
 // Constants
 const TWITTER_HANDLE = 'CalMoonDude1';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
-const OPENSEA_LINK = 'https://testnets.opensea.io/collection/squarenft-gvms9yd6in';
+const OPENSEA_LINK = 'https://testnets.opensea.io/collection/squarenft-icys4kexwu';
 const TOTAL_MINT_COUNT = 50;
 
-const CONTRACT_ADDRESS = "0xA5f0e8986fFe2F62717b299250b0C4383d3c2C63";
+const CONTRACT_ADDRESS = "0x6BC44F1e8769DF34b10951B786d247f615c2482C";
+
+const colors = ["red", "blue", "grey", "yellow", "green", "purple", "orange", "brown"];
+const firstWords = ["Big", "Fat", "Small", "Tall", "Beautiful", "Enlightened", "Weak", "Delicious", "Hard", "Soft", "Fancy", "Smelly", "Disgusting", "Phallic", "Speedy", "Tantalizing", "Sultry"];
+const secondWords = ["Stinging", "Twirling", "Diving", "Melting", "Sinking", "Dipping", "Fucking", "Waving", "Fighting", "Falling", "Laughing", "Sulking", "Dreaming", "Pissing", "Rolling"];
+const thirdWords = ["Octopus", "Tree", "Cloud", "Monster", "Beetle", "Bard", "Yeetus", "Danger", "Whirlpool", "Boulder", "Avalanche", "Jello", "Stingray", "Buddha", "Dog", "Ferret", "Trash"];
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
   const [NFTsMinted, setNFTsMinted] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  const getRandomWord = (wordArr: string[]) => {
+    const rand = Math.floor(Math.random() * wordArr.length);
+    return wordArr[rand];
+  }
 
   const checkIfWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -101,6 +114,27 @@ const App = () => {
     }
   }
 
+  const getIpfsLink = (metadata: any) => {
+    const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`
+    return axios.post(
+      url,
+      metadata,
+      {
+        headers: {
+          pinata_api_key: String(import.meta.env.VITE_PINATA_API_KEY),
+          pinata_secret_api_key: String(import.meta.env.VITE_PINATA_SECRET_API_KEY)
+        },
+      }
+    )
+    .then(function (response) {
+      //handle your response here
+      return response.data.IpfsHash;
+    })
+    .catch(function (error) {
+      //handle error here
+    });
+  };
+
   const askContractToMintNft = async () => {;
     try {
       const { ethereum } = window;
@@ -110,14 +144,31 @@ const App = () => {
         const signer = provider.getSigner();
         const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNftAbi.abi, signer);
 
-        console.log("Going to pop wallet now to pay gas...");
-        let nftTxn = await connectedContract.makeAnEpicNFT();
-        setIsLoading(true);
+        const fontColor = getRandomWord(colors);
+        const firstWord = getRandomWord(firstWords);
+        const secondWord = getRandomWord(secondWords);
+        const thirdWord = getRandomWord(thirdWords);
+        const combinedWord = firstWord + secondWord + thirdWord;
 
-        console.log("Mining...please wait.");
-        await nftTxn.wait();
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: ${fontColor}; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='black' /><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>${combinedWord}</text></svg>`;
+        const encodedSvg = Buffer.from(svg).toString("base64");
+        
+        let metadata = JSON.stringify({
+          name: combinedWord,
+          description: "A highly acclaimed collection of very cool squares.",
+          image: `data:image/svg+xml;base64,${encodedSvg}`
+        })
+        console.log(metadata);
+        const CID = await getIpfsLink(metadata);
 
-        console.log(`Mined, see transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`);
+        // console.log("Going to pop wallet now to pay gas...");
+        // let nftTxn = await connectedContract.makeAnEpicNFT(`https://cloudflare-ipfs.com/ipfs/${CID}`);
+        // setIsLoading(true);
+
+        // console.log("Mining...please wait.");
+        // await nftTxn.wait();
+
+        // console.log(`Mined, see transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`);
       } else {
         console.log("Ethereum object doesn't exist");
       }

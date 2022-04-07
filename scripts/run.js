@@ -4,13 +4,13 @@ const main = async () => {
     await nftContract.deployed();
     console.log("Contract deployed to:", nftContract.address);
 
-    let txn = await nftContract.makeAnEpicNFT();
+    let txn = await nftContract.makeAnEpicNFT("https://cloudflare-ipfs.com/ipfs/QmevJDHKDnJ18oV38QSs6TtCvGSo8nELi6Rb3679i7Ydcz");
     await txn.wait();
 
     let nftCountTxn = await nftContract.getTotalNFTsMintedSoFar();
     console.log(nftCountTxn.toNumber());
 
-    txn = await nftContract.makeAnEpicNFT();
+    txn = await nftContract.makeAnEpicNFT("https://cloudflare-ipfs.com/ipfs/QmeFZsLqS2GvdYRjEXMfYynW3BgqtgTexhPDpSY97rwDjy");
     await txn.wait()
 }
 
