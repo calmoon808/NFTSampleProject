@@ -11,10 +11,10 @@ import axios from "axios";
 // Constants
 const TWITTER_HANDLE = 'CalMoonDude1';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
-const OPENSEA_LINK = 'https://testnets.opensea.io/collection/squarenft-icys4kexwu';
+const OPENSEA_LINK = 'https://testnets.opensea.io/collection/squarenft-5qxr5ozzkb';
 const TOTAL_MINT_COUNT = 50;
 
-const CONTRACT_ADDRESS = "0x6BC44F1e8769DF34b10951B786d247f615c2482C";
+const CONTRACT_ADDRESS = "0x92a682F242ABD41Ab2060810237f9eD2C350413A";
 
 const colors = ["red", "blue", "grey", "yellow", "green", "purple", "orange", "brown"];
 const firstWords = ["Big", "Fat", "Small", "Tall", "Beautiful", "Enlightened", "Weak", "Delicious", "Hard", "Soft", "Fancy", "Smelly", "Disgusting", "Phallic", "Speedy", "Tantalizing", "Sultry"];
@@ -64,6 +64,7 @@ const App = () => {
       const account = accounts[0];
       console.log("Found an authorized account:", account);
       setCurrentAccount(account);
+      setupEventListener();
     } else {
       console.log("No authorized account found");
     }
@@ -82,7 +83,6 @@ const App = () => {
 
       console.log("Connected", accounts[0]);
       setCurrentAccount(accounts[0]);
-      setupEventListener();
     } catch (error) {
       console.log(error)
     }
@@ -99,7 +99,7 @@ const App = () => {
         
         connectedContract.on("NewEpicNFTMinted", async (from, tokenId) => {
           console.log(from, tokenId.toNumber(), NFTsMinted);
-          if ((tokenId.toNumber() + 1) !== NFTsMinted) {
+          if ((tokenId.toNumber() + 1) != NFTsMinted) {
             alert(`Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`);
             setNFTsMinted(await getTotalNFTsMintedSoFar());
           }
@@ -152,23 +152,21 @@ const App = () => {
 
         const svg = `<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: ${fontColor}; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='black' /><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>${combinedWord}</text></svg>`;
         const encodedSvg = Buffer.from(svg).toString("base64");
-        
-        let metadata = JSON.stringify({
+        let metadata = {
           name: combinedWord,
           description: "A highly acclaimed collection of very cool squares.",
           image: `data:image/svg+xml;base64,${encodedSvg}`
-        })
-        console.log(metadata);
+        }
         const CID = await getIpfsLink(metadata);
 
-        // console.log("Going to pop wallet now to pay gas...");
-        // let nftTxn = await connectedContract.makeAnEpicNFT(`https://cloudflare-ipfs.com/ipfs/${CID}`);
-        // setIsLoading(true);
+        console.log("Going to pop wallet now to pay gas...");
+        let nftTxn = await connectedContract.makeAnEpicNFT(`https://cloudflare-ipfs.com/ipfs/${CID}`);
+        setIsLoading(true);
 
-        // console.log("Mining...please wait.");
-        // await nftTxn.wait();
+        console.log("Mining...please wait.");
+        await nftTxn.wait();
 
-        // console.log(`Mined, see transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`);
+        console.log(`Mined, see transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`);
       } else {
         console.log("Ethereum object doesn't exist");
       }
